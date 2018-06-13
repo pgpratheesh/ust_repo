@@ -1,0 +1,34 @@
+---
+- name: download template file
+  local_action:
+    module: get_url
+    url: http://172.31.23.154/template.j2
+    dest: "{{ home }}/PRATHEESH"
+        
+- template:
+    src: "{{ home }}/PRATHEESH/template.j2"
+    dest: "{{ home }}/deploy/{{ ansible_distribution }}.conf"
+    
+- block:
+   - lineinfile:
+       path: "{{ home }}/deploy/{{ ansible_distribution }}.conf"
+       regexp: "{{ item.regexp }}"
+       line: "{{ item.line }}"
+       state: present
+     with_items:
+       - { regexp: '^Listen', line: 'Listen 8080' }
+       - { regexp: 'DocumentRoot', line: "DocumentRoot {{ pg }}/ubuntu" }
+  when: ansible_distribution == "Ubuntu"
+      
+- block:
+   - replace:
+       path: "{{ home }}/deploy/{{ ansible_distribution }}.conf"
+       regexp: "{{ item.regexp }}"
+       replace: "{{ item.replace }}"
+     with_items:
+         - { regexp: 'Listen 80', replace: 'Listen 9000' }
+         - { regexp: 'DocumentRoot /var/www/html', replace: "DocumentRoot {{ pg }}/redhat" }
+  when: ansible_distribution == "Redhat"
+  
+- include: restart.yml
+  tags: apply_template

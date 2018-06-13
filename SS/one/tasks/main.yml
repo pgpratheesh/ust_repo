@@ -1,0 +1,88 @@
+---
+- debug: 
+    msg:
+    - "Welcome to State Street Corporation"
+    - "OS {{ ansible_distribution }}"
+    - "Hostname {{ ansible_nodename }}"
+    - "IP address {{ ansible_all_ipv4_addresses.0 }}"
+    - "Total Memory is {{ ansible_memtotal_mb }}"
+    - "Total processors is {{ ansible_processor_count }}"
+  tags: output_message
+
+- name: calling task5
+  include: task5.yml
+  when: ( Build_Name != '' or Build_Number != '' )
+  ignore_errors: yes
+
+
+- name: Create Folder
+  file: 
+    path: "{{ home }}/PRATHEESH"
+    state: directory
+    mode: u=rwx,g=rwx,o=rwx
+    
+- include: apachecheck.yml
+
+- include: stop.yml
+  when: apache2_status.changed == true
+  tags: create_folder
+  
+
+- block:
+    - name: copying files
+      copy:
+        src: /etc/apache2/apache2.conf
+        dest: "{{ home }}/PRATHEESH/apache2.conf"
+        remote_src: yes
+        
+    - name: creating working folders
+      file:
+        path: "{{ home }}/{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: u=rwx,g=rwx,o=rwx
+      with_items:
+        - tmp
+        - deploy
+        
+    - name: download zip file
+      get_url:
+        url: http://172.31.23.154/pg.zip
+        dest: "{{ home }}/tmp"
+        owner: ubuntu
+        group: ubuntu
+      register: url_result
+    - debug: msg="{{ url_result }}"
+    
+    - fail:
+        msg: "download url not found"
+      when: url_result.status_code != 200
+      
+    - name: Backup the folder
+      archive:
+        path: "{{ home }}/deploy"
+        dest: "{{ home }}/PRATHEESH/backup.{{ansible_date_time.date}}{{ansible_date_time.time}}.zip"
+        format: zip
+
+    - name: deploy new file
+      unarchive:
+        src: "{{ url_result.dest }}"
+        dest: "{{ home }}/deploy"
+        remote_src: yes
+        
+    - include: configure.yml
+   
+    - mail:
+        host: smtp.gmail.com
+        port: 587
+        secure: starttls
+        charset: utf-8
+        sender: "{{ admin_mail }}"
+        username: "{{ admin_mail }}"
+        password: "{{ passwd }}"
+        to: "{{ to_mail }}"
+        attach: /home/ubuntu/ansible.log
+        subject: Ya u rite
+      delegate_to: localhost
+      tags: deploy_build 

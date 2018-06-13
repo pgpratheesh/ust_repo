@@ -1,0 +1,13 @@
+---
+- name: check apache2 status
+  service:
+    name: apache2
+    state: stopped
+  check_mode: yes
+  register: apache2_status
+  
+- debug: msg="{{ apache2_status }}"
+  
+- debug: msg="apache2 stopped"
+  when: apache2_status.changed == true
+  tags: check_apache2

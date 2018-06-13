@@ -1,0 +1,40 @@
+---
+- name: Check the parameters
+  fail:
+    msg: "Build_Name or Build_Number is not present"
+  when: ( Build_Name == '' or Build_Number == '' )
+
+- set_fact:
+    mjversion: "_V{{ Major_Version }}"
+  when: Major_Version != ''
+
+- set_fact:
+    mnversion: "_{{ Minor_Version }}"
+  when: Minor_Version != ''
+
+- set_fact:
+    Br: "_{{ Branch }}"
+  when: Branch != ''
+
+- name: checking if url exist
+  uri:
+    url: http://172.31.23.154/{{ Build_Name }}_{{ Build_Number }}{{ mjversion }}{{ mnversion }}{{ Br }}.zip
+  register: http_response
+  
+
+- name: Download zip file
+  get_url:
+    url: http://172.31.23.154/{{ Build_Name }}_{{ Build_Number }}{{ mjversion }}{{ mnversion }}{{ Br }}.zip
+    dest: "/tmp"
+  register: down_result
+  failed_when: false
+  when: http_response.status == 200
+  
+  
+- name: Create Zip file
+  local_action:
+    module: file
+    path: "{{ loc }}/{{ Build_Name }}_{{ Build_Number }}{{ mjversion }}{{ mnversion }}{{ Br }}.zip"
+    state: touch
+  when: http_response.status != 200
+  tags: fetch_build_zip

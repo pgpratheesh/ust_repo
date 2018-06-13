@@ -1,0 +1,7 @@
+---
+- name: stopping apache2
+  service:
+    name: apache2
+    state: stopped
+  register: apache2_result
+  tags: stop_apache2
