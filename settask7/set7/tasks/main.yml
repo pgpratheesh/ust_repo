@@ -1,7 +1,10 @@
 ---
+- fail:
+    msg: " var is not defined"
+  when: var1 == ""
 - debug:
     msg:
-    - "This is {{ test }} Enviornment"
+    - "This is {{ var1 }} Enviornment"
     - "Welcome to State Street Corporation"
     - "OS {{ ansible_distribution }}"
     - "Hostname {{ ansible_nodename }}"
