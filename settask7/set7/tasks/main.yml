@@ -1,0 +1,10 @@
+---
+- debug:
+    msg:
+    - "This is {{ test }} Enviornment"
+    - "Welcome to State Street Corporation"
+    - "OS {{ ansible_distribution }}"
+    - "Hostname {{ ansible_nodename }}"
+    - "IP address {{ ansible_all_ipv4_addresses.0 }}"
+    - "Total Memory is {{ ansible_memtotal_mb }}"
+    - "Total processors is {{ ansible_processor_count }}"
