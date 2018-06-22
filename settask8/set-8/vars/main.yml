@@ -1,0 +1,7 @@
+---
+# vars file for set-8
+Build_Name: ""
+Build_Number: ""
+Maj_Version: "V{{ Major_Version }}"
+Minor_Version: ""
+Branch: ""

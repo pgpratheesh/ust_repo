@@ -1,0 +1,9 @@
+---
+- name: starting Service
+  service:
+    name: apache2
+    state: started
+  register: apache_start
+  
+- debug: msg="Buid Success!!!"
+  when: apache_start.state == 'started'

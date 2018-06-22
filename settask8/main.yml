@@ -1,0 +1,5 @@
+---
+- hosts: web
+
+  roles:
+    - { role: set-8, become: true }
