@@ -24,7 +24,7 @@
     - name: checking username
       fail:
         msg: " user is not ubuntu"
-      when: ansible_user_id != "ubuntu"
+      when: ansible_user_id != sym.stat.pw_name
       
     - slurp:
         src: "{{ fi }}"
