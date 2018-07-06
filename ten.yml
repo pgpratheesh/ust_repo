@@ -1,0 +1,44 @@
+---
+- hosts: localhost
+  vars:
+    Alert: '90'
+    Tdisk_seq: []
+    Qdisk_seq: []
+    new_list: []
+    exclude_list: [/dev/loop3 , /snap/core/4917 , tmpfs , /dev/loop0]
+  gather_facts: yes
+  tasks:
+      
+    - set_fact:
+        count: "{{ansible_mounts | count}}"
+      
+    - debug: msg="Total number of drives:,{{count}}"
+
+    - set_fact:
+        seq: "{{ lookup('sequence', 'start=0 end={{count|int - 1}}', wantlist=true) | map('int') | list }}"
+    - debug: msg="{{seq}}"
+
+    - set_fact:
+        Tdisk_seq: "{{ Tdisk_seq }} + [ '{{ ansible_mounts[item].mount }}' ]"
+      with_items: "{{seq}}"
+
+    - set_fact:
+        Qdisk_seq: "{{Tdisk_seq | symmetric_difference(exclude_list)}}"    
+        
+    - debug:
+        msg: 
+          - "{{ansible_mounts[item].device}}"
+          - "Running out of space {{ ansible_mounts[item].mount}}({{(ansible_mounts[item].block_used * 100) // (ansible_mounts[item].block_total)}}%)   on server {{ansible_hostname}}, {{ansible_date_time.iso8601_micro}}"
+      with_items:  "{{seq}}"
+      when: ansible_mounts[item].device != exclude_list and (ansible_mounts[item].block_used * 100) // (ansible_mounts[item].block_total) > 90
+      
+    - name: mail check
+      mail:
+        host: smtp.gmail.com
+        port: 465
+        username: XXX
+        password: XXX
+        subject:  'Alert: Almost out of disk space {{ ansible_mounts[item].mount}} 100%'
+        to: pgpratheesh@gmail.com
+      with_items:  "{{seq}}"
+      when: (ansible_mounts[item].block_used * 100) // (ansible_mounts[item].block_total) > 90 and (ansible_mounts[item].device in Qdisk_seq)
