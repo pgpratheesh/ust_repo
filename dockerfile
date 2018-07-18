@@ -1,6 +1,13 @@
-FROM tomcat
+FROM java:8-jre
+#https://github.com/docker-library/tomcat
 
-MAINTAINER Pratheesh
+ENV CATALINA_HOME /usr/local/tomcat
+ENV PATH $CATALINA_HOME/bin:$PATH
+
+RUN mkdir -p "$CATALINA_HOME"
+RUN chown -R 777 "$CATALINA_HOME"
+WORKDIR $CATALINA_HOME
+
 
 RUN apt-get update && apt-get -y upgrade
 
