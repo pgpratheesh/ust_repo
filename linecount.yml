@@ -9,7 +9,7 @@
     - name: checking the filename
       fail:
         msg: "file not defined"
-      when: fi is not defined or fi == "/etc/fstab"
+      when: fi is not defined or fi == "/etc/passwd"
       
     - name: check the file status
       stat:
