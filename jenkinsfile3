@@ -1,0 +1,58 @@
+#!/usr/bin/env groovy
+ 
+pipeline {
+    agent any
+
+options {
+    buildDiscarder(logRotator(numToKeepStr: '3'))
+  }
+    stages {
+        stage('Checkout scm to a different directory inside workspace') {
+            steps {
+                
+                checkout scm
+                
+            }
+        }
+         
+            
+       stage('Run syntax check for playbook '){
+            steps {
+                sh  "ansible-playbook linecount.yml --syntax-check"
+            }
+        }
+          
+     
+      stage('Dry Run playbook '){
+            steps {
+                sh  "ansible-playbook linecount.yml --check "
+            }
+        }
+       stage('Run playbook '){
+            steps {
+                sh  "ansible-playbook linecount.yml "
+            }
+        }
+            
+           
+   }
+      
+          
+ 
+  
+         
+post {
+        success {
+            script {
+                currentBuild.result = 'SUCCESS'
+            }
+            echo "Congratulations !!! You got the code working !!"
+        }
+ failure {
+       script {
+                currentBuild.result = 'FAILURE'
+          }
+         echo " Error !!! Please recheck your code and config"
+     }
+     }
+}
