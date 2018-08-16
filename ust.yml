@@ -1,14 +1,9 @@
 ---
 - hosts: localhost
   tasks:
-    - name: Create a JIRA issue
+    - name: kick off project sync
       uri:
-        url: http://52.90.136.67/api/v1/projects/28/update
-        method: POST
-        user: "admin"
-        password: "password"
-        validate_certs: False
-        status_code:
-          - 200
-          - 201
-          - 202
+        url: http://52.90.136.67/api/v1/projects/28/update/
+        method: POST
+        user: admin
+        password: "password"
