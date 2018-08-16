@@ -7,7 +7,7 @@
         method: POST
         user: admin
         password: "password"
-        validate_certs: no
+        validate_certs: false
         status_code:
           - 200
           - 201
