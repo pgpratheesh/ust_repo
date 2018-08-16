@@ -1,7 +1,6 @@
 ---
 - hosts: localhost
   tasks:
-  
     - name: kick off project sync
       uri:
         url:  http://52.90.136.67/api/v1/projects/28/update
