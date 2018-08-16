@@ -1,0 +1,12 @@
+---
+- hosts: dev
+  become: yes
+  vars:
+    cli_user: ""
+    cli_username: ""
+    g_password: global@123
+    user: ""
+
+  tasks:
+    - name: Testing rest api
+      debug: msg="{{cli_username}}"
