@@ -1,0 +1,48 @@
+---
+- hosts: web
+  gather_facts: yes
+  vars:
+    f: ""
+    len: ""
+  tasks:
+    - name: check parameters
+      fail:
+        msg: " parameter not specified"
+      when: f == ""
+    
+    - name: check username
+      fail: 
+        msg: " User is not ubuntu! exiting"
+      when: ansible_user_id != "ubuntu"
+      
+    - name: check the file info
+      stat:
+        path: "{{ f }}"
+      register: sym
+      
+    - debug: msg="{{ sym.stat.exists }}"  
+      
+    - name: checking file is exist 
+      fail:
+        msg: " File is not exist"
+      when: sym.stat.exists == false
+    
+    - name: count lines
+      replace:
+        path: "{{ f }}"
+        regexp: '\n'
+        replace: '\t'
+      check_mode: yes
+      register: result
+      
+    - debug: msg="{{ result.msg }}"
+    - name: check file content
+      debug:
+        msg: " File contains zero lines"
+      when: result.msg == ""
+      
+    - block:
+        - set_fact:
+            len: "{{ result.msg.split()[0] }}"
+        - debug: msg="Number of line in {{ f }}:{{ len }}"
+      when: result.msg != ""

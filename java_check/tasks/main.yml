@@ -1,0 +1,13 @@
+---
+ - name: Check if java is installed
+   command: java -version
+   register: java_result
+   ignore_errors: True
+
+ - debug:
+     msg: "Success - Java is installed"
+   when:  java_result is success
+      
+ - debug:
+     msg: "Success - Java not installed"
+   when:  java_result is failed

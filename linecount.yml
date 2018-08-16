@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  vars:
+    fi: ""
+    
+  tasks:
+  
+    - name: checking the filename
+      fail:
+        msg: "file not defined"
+      when: fi is not defined or fi == "/etc/passwd"
+      
+    - name: check the file status
+      stat:
+        path: "{{ fi }}"
+      register: sym
+      
+      
+    - slurp:
+        src: "{{ fi }}"
+      register: cont
+      
+    - debug: 
+        msg: "{{fi}}: contains {{(cont['content']|b64decode).count('\n')}} Lines"
+      when: sym.stat.size != 0
+      
+    - debug: 
+        msg: "{{fi}}: contains zero Lines"
+      when: sym.stat.size == 0

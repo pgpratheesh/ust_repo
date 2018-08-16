@@ -1,0 +1,77 @@
+---
+- name: Check the parameters
+  fail:
+    msg: "Build_Name or Build_Number is not present"
+  when: ( Build_Name == '' and Build_Number == '' and Major_Version == '' and Minor_Version == '' and Branch == '' )
+
+
+- name: checking if url exist
+  uri:
+    url: http://172.31.23.154/{{ Build_Name }}_{{ Build_Number }}_{{ Maj_Version }}_{{ Minor_Version }}_{{ Branch }}.zip
+  register: http_response
+
+  
+- name: Download zip file
+  get_url:
+    url: http://172.31.23.154/{{ Build_Name }}_{{ Build_Number }}_{{ Maj_Version }}_{{ Minor_Version }}_{{ Branch }}.zip
+    dest: "/tmp/work"
+    owner: ubuntu
+    mode: 755
+  register: down_result
+  when: http_response.status == 200
+  
+
+
+
+- name: Get running processes
+  shell: "ps -ef | grep -v grep | grep -w apache2 | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running processes
+  shell: "kill -9 {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Waiting until all running processes are killed
+  wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+  ignore_errors: yes
+#
+- name: Get running processes ids
+  shell: "ps -ef | grep -v grep | grep -w apache2 | awk '{print $2}'"
+  register: remain_process
+#
+  
+- block:
+    - name: backup deploy folder
+      archive:
+        path: "/var/www/html/BUILD"
+        dest: "/tmp/work/backup.{{ansible_date_time.date}}{{ansible_date_time.time}}.zip"
+        format: zip
+      register: backup_stat
+      
+    - set_fact:
+        last_backup: "{{ down_result.dest }}"
+
+    - debug: msg="{{ last_backup }}"
+
+      
+  
+        
+    - name: unzip downloaded file 
+      unarchive:
+        src: "{{ down_result.dest }}"
+        dest: "/var/www/html"
+        remote_src: yes
+  when: remain_process.stdout == ""
+  
+- set_fact: 
+    build_ver: "{{lookup('file', '/var/www/html/BUILD/build.info') }}"
+    build_num: "jenkins_build_{{ Build_Number }}"
+    
+- include: start.yml
+  when: build_num == build_ver
+  
+- include: mis.yml      
+  when: build_num != build_ver
